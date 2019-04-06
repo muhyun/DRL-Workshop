@@ -48,7 +48,7 @@ AWS DeepRacer 페이지에서, 왼쪽 메뉴의 **Reinforcement learning**를 �
 
 Reinforcement learning 메뉴를 선택하면 모델 페이지가 나타날 것입니다. 이 페이지를 통해 여러분이 만드신 모든 모델 목록과 각 모델의 상태(status)를 확인할 수 있습니다. 이 페이지에서 모델 생성 프로세스를 시작하시면 됩니다. 뿐만 아니라, 모델 다운로드, 복제, 삭제도 이 페이지에서 하실 수 있습니다.
 
-[![Model List Page](https://github.com/aws-samples/aws-deepracer-workshops/raw/master/Workshops/2019-AWSSummits-AWSDeepRacerService/Lab1/img/model_list_deepracer.png)](https://github.com/aws-samples/aws-deepracer-workshops/blob/master/Workshops/2019-AWSSummits-AWSDeepRacerService/Lab1/img/model_list_deepracer.png)
+[![Model List Page](img/model_list_deepracer.png)]
 
 모델이 없을 경우 목록에는 아무것도 안 나타날 것입니다. 여기서 **Create model** 버튼을 클릭해서 모델을 만들 수 있습니다. 모델을 생성한 후에는 이 페이지를 통해 모델의 상태(status)(예: 트레이닝, 준비 완료 등)를 확인할 수 있습니다. 모델의 상태(status)가 "준비 완료"이면 모델 트레이닝이 완료되었음을 의미하는 것으로, 모델을 다운로드 하거나 테스트(eavluate)할 수 있습니다. 뿐만 아니라, 가상의 레이스에 모델을 제출할 수도 있습니다. **Model details** 페이지로 이동하고 싶으시면 모델 이름을 클릭하시면 됩니다. 
 
