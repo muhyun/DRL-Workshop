@@ -338,7 +338,7 @@ AWS RoboMaker에서는 모든 시뮬레이션 작업 목록을 볼 수 있으며
 
 ![RoboMaker simulator](img/robomaker_simulator.png) 
 
-Amazon Kinesis Video Stream은 일반적으로 저장 공간효율적 사용과 스트림 수 제한으로 인해 사용이 끝나면 삭제됩니다. 현재 훈련 및 평가 과정의 비디오가 S3 계정에 저장되지 않는 것도 기억하시기 바랍니다.
+Amazon Kinesis Video Stream은 일반적으로 저장 공간의 효율적 사용과 스트림 수 제한으로 인해 사용이 끝나면 삭제됩니다. 현재 훈련 및 평가 과정의 비디오가 S3 계정에 저장되지 않는 것도 기억하시기 바랍니다.
 
 ![KVS stream](img/kvs_stream_video.png)
 
