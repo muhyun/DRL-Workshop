@@ -98,31 +98,34 @@ Section 2에서 AWS DeepRacer League에 대한 자세한 내용을 제공할 예
 
 - 모델은 action space에 없는 행동을 수행하지 않습니다. 어떤 모델이 특정 행동이 필요 없는 트랙에서 학습되었다면 (예 : 좌/우회전을 보상받지 못하는 직선 트랙), 그 행동을 언제 사용해야 할지 모를 것입니다. 따라서 안정적인 모델을 설계하려면 action space와 학습 트랙을 염두에 두십시오.
 - 빠른 속도 또는 넓은 조향각을 지정하는 것은 좋지만, 여러분의 보상 함수에서 전속력으로 회전 구간을 운전하는 것 또는 직선 구간에서 지그재그로 움직이는 것이 적절한지 생각해 봐야 합니다.
-- 실제 경주의 경우, 자동차가 시뮬레이터에서 배운 것보다 더 빨리 주행하지 못하도록 AWS DeepRacer의 웹 서버 사용자 인터페이스에서 Throttle 값을 조절해야 합니다.
+- 실제 경주의 경우, 자동차가 시뮬레이터에서 배운 것보다 더 빨리 주행하지 못하도록 AWS DeepRacer의 웹 서버 사용자 인터페이스에서 speed 값을 조절해야 합니다.
 
 
 ## 3.4 Reward function
 
 강화 학습에서는 보상 함수(reward function)를 잘 설계하는 것이 이 모델 학습에 **중요한 역할**을 합니다. 보상 함수는 학습된 RL 모델이 자율 주행을 할 때 우리가 원하는 바대로 행동 할 수 있도록 좋은 운전 행동을 장려하는 데 사용됩니다.
 
-보상 함수는 행동 결과의 품질을 평가하고 그에 따라 보상합니다. 보상은 학습을 수행하는 동안 각 행동을 취한 후에 시뮬레이션에서 계산됩니다. 보상 함수에 들어갈 로직은 여러분이 Python 3 문법으로 직접 채워 넣습니다. 보상 함수를 코딩할 때, 시뮬레이션에서 얻은 여러 측정 값들을 변수로 사용할 수 있습니다. 
+보상 함수는 행동 결과의 품질을 평가하고 그에 따라 보상합니다. 실제로 학습이 수행되는 동안 매번 행동을 취한 후 보상이 계산되며, 모델을 학습하는데 사용되는 경험(상태, 행동, 다음 상태, 보상에 대해서 이야기한 것을 기억해보세요)의 중요한 파트를 구성합니다. 시뮬레이터가 제공하는 다양한 변수들을 사용해서 보상 함수 로직을 만들 수 있습니다. 이 변수들은 자동차의 조향각도, 속도, (x,y) 좌표같은 레이스 트랙과 자동차의 관계, waypoint와 같은 레이스 트랙에 대한 정보들을 제공합니다. 여러분은 Python 3 언어로 이 값들을 활용한 보상 함수를 만들어야 합니다.
 
-아래는 보상 함수에 사용할 수 있는 변수들의 목록입니다. 저희들이 더 좋은 방법을 찾을 때마다 아래 목록을 종종 업데이트한다는 점을 기억해 두세요. 그럴 때마다 여러분의 보상함수를 적절히 수정하십시오. Seoul 워크샵에서는 아래의 변수들이 AWS DeepRacer 콘솔에서 현재 사용 가능합니다. 혹시 AWS DeepRacer 서비스에서 간혹 다르게 설명 되어 있다면 이를 무시하고, 아래의 변수 이름과 설명을 사용하십시오. 가장 두드러진 차이점은 Throttle과 Steering 입니다.
+아래는 보상 함수에 사용할 수 있는 변수들의 표입니다. 저희들이 더 좋은 방법을 찾을 때마다 아래 목록을 종종 업데이트한다는 점을 기억해 두세요. 그럴 때마다 여러분의 보상함수를 적절히 수정하십시오. AWS 서울 서밋 (2019년 4월 17/18일) 워크샵에서는 아래의 변수들이 AWS DeepRacer 콘솔에서 현재 사용 가능합니다. 항상 AWS DeepRacer 서비스의 최신 설명을 참조해주세요.  만약 SageMaker RL 노트북을 사용한다면, 노브북에서 사용된 문법을 참조해주세요.
 
-| 변수 이름            | 타입                     | 설명                                                         |
-| -------------------- | ------------------------ | ------------------------------------------------------------ |
-| on_track             | boolean                  | 4개의 바퀴 중 하나라도 도로 표면과 경계선으로 정의된 트랙에 있으면 on_track은 True 입니다. 4개의 바퀴가 모두 트랙에서 벗어난 경우 on_track은 False입니다. on_track이 False이면 차량이 리셋됩니다. |
-| x                    | Float                    | 자동차의 차축 중심의 x 좌표를 미터로 반환합니다.             |
-| y                    | Float                    | 자동차의 차축 중심의 y 좌표를 미터로 반환합니다.             |
-| distance_from_center | Float [0, track_width/2] | 트랙 중심으로부터 절대 거리. 트랙의 중심은 모든 waypoint를 연결하는 선에 의해 결정됩니다. |
-| car_orientation      | Float [-pi,pi]           | 자동차가 향하는 방향을 Radian 단위로 반환합니다. 차가 x가 증가하는 방향으로 향하고 y가 일정하다면 0을 반환합니다. 차가 y가 증가하는 방향으로 향하고 x가 일정하면 pi/2를 반환합니다. 차가 y가 감소하는 방향으로 향하고 x가 일정하면 -pi/2를 반환합니다. |
-| progress             | Float [0,100]            | 트랙 주행 완료 백분율.                                       |
-| steps                | Integer                  | 완료된 스텝 수. 한 스텝은 (state, action, next state, reward)의 튜플 입니다. |
-| throttle             | Float                    | 초당 미터 단위의 자동차 속도. 이것은 선택된 action space와 관련 있습니다. |
-| steering             | Float                    | Radian 단위의 원하는 자동차의 조향 각도. 이것은 선택된 action space와 관련있으며 (degree가 아니라) Radian으로 표현 됩니다. 양수(+) 각도는 왼쪽으로, 음수(-) 각도는 오른쪽으로 진행함을 나타냅니다. 이것은 2D 기하학적 처리와 관련 있습니다. |
-| track_width          | Float                    | 트랙의 폭 (미터 단위)                                        |
-| waypoints            | List                     | 트랙 중앙을 따라 있는 waypoint들의 (x,y) 좌표 목록(ordered list). 리스트의 인덱스는 0부터 시작함. |
-| closest_waypoint     | Integer                  | 직선 거리로 측정한, 가장 가까운 waypoint의 인덱스. 이 waypoint는 차의 앞쪽에 있을 수도, 뒤쪽에 있을 수도 있습니다. |
+| 변수 이름            | 문법                                                         | 타입                     | 설명                                                         |
+| -------------------- | ------------------------------------------------------------ | ------------------------ | ------------------------------------------------------------ |
+| all_wheels_on_track  | params['all_wheels_on_track']                                | Boolean                  | 경계선을 포함은 도로의 표면으로 정의된 드랙에서 4바퀴 중에 어느 하나라도 트랙에 있는 경우, all_wheels_on_track의 값은 True입니다. 만약, 4바퀴 모두 트랙을 벗어나면, all_wheels_on_track은 False가 됩니다. all_wheels_on_track이 False가 되면 바로 자동차는 리셋됩니다. |
+| x                    | params['x']                                                  | Float                    | 자동차의 차축 중심의 x 좌표를 미터로 반환합니다.             |
+| y                    | params['y']                                                  | Float                    | 자동차의 차축 중심의 y 좌표를 미터로 반환합니다.             |
+| distance_from_center | params['distance_from_center']                               | Float [0, track_width/2] | 트랙 중심으로부터 절대 거리. 트랙의 중심은 모든 waypoint를 연결하는 선에 의해 결정됩니다. |
+| is_left_of_center    | params['is_left_of_center']                                  | Boolean                  | 자동차가 트랙의 중앙선 왼쪽에 있는지를 알려줍니다.           |
+| is_reversed          | params['is_reversed']                                        | Boolean                  | 이 변수는 트랙의 원래 방향으로 주행하면서 학습을 수행하는지, 반대 방향으로 주행하면서 학습을 하는지를 알려줍니다. |
+| heading              | params['heading']                                            | Float (-pi,pi]           | 자동차가 진행하고 있는 방향을 radian으로 알려줍니다. 자동차가 x-축이 증가하는 방향(즉, y축 값은 상수)을 보고 있다면, 리턴값은 pi/2가 됩니다. y-축의 값이 줄어드는 방향(x-축은 상수)을 바라고 있는 경우, -pi/2가 반환됩니다. |
+| progress             | params['progress']                                           | Float [0,100]            | 트랙 주행 완료 백분율. Progress가 100이면 한바퀴를 완주한 것을 의미합니다. |
+| steps                | params['steps']                                              | Integer                  | 완료된 스텝 수. 한 스텝은 (state, action, next state, reward)의 튜플 입니다. |
+| speed                | params['speed']                                              | Float                    | 초당 미터 단위의 자동차 속도. 이것은 선택된 action space와 관련 있습니다. |
+| steering_angle       | params['steering_angle']                                     | Float                    | Radian 단위의 원하는 자동차의 조향 각도. 이것은 선택된 action space와 관련있으며 (degree가 아니라) Radian으로 표현 됩니다. 양수(+) 각도는 왼쪽으로, 음수(-) 각도는 오른쪽으로 진행함을 나타냅니다. 이것은 2D 기하학적 처리와 관련 있습니다. |
+| track_width          | params['track_width']                                        | Float                    | 트랙의 폭 (미터 단위)                                        |
+| waypoints            | params['waypoints'] for the full list or params['waypoints'][i] for the i-th waypoint | List                     | 트랙 중앙을 따라 있는 waypoint들의 (x,y) 좌표 목록(ordered list). 리스트의 인덱스는 0부터 시작함. |
+| closest_waypoints    | params['closest_waypoints'][0] or params['closest_waypoints'][1] | Integer                  | 가까운 이전waypoint 인덱스와 가까운 다음 waypoint의 인덱스를 목록으로 반환합니다. params['closest_waypoints'][0] 는 가까운 이전 waypointㅇ,; 인덱스를 반환하고, params['closest_waypoints'][1] 는 가까운 다음 waypoint의 인덱스를 반환합니다. |
+
 
 보상 함수에서 사용할 수 있는 변수들을 설명하는 그림입니다.
 
@@ -141,20 +144,26 @@ Section 2에서 AWS DeepRacer League에 대한 자세한 내용을 제공할 예
 여기에서는 먼저 3 개의 마커를 사용하여 트랙 주위에 3 개의 밴드를 만든 다음, 중심선에 가까운 좁은 밴드에서 주행 했을 때 더 많은 보상을 합니다. 보상 값의 크기 차이에도 유의하십시오. 우리는 좁은 밴드에 머무를 때 1, 중간 밴드에 머무를 때 0.5, 넓은 밴드에 머무를 때 0.1의 보상을 제공합니다. 좁은 밴드에 대한 보상을 줄이거나 중간 밴드에 대한 보상을 높인다면 차량이 트랙의 넓은 면을 사용하도록 유도하게 될 것입니다. 이것은 특히 급회전 구간이 있을 때 유용할 수 있습니다.
 
 ```python
-def reward_function(on_track, x, y, distance_from_center, car_orientation, progress, steps, throttle, steering, track_width, waypoints, closest_waypoint):
-	marker_1 = 0.1 * track_width
-	marker_2 = 0.25 * track_width
-	marker_3 = 0.5 * track_width
-
-	reward = 1e-3
-	if distance_from_center <= marker_1:
-		reward = 1
-	elif distance_from_center <= marker_2:
+def reward_function(params):
+	'''
+	Example of rewarding the agent to follow center line
+	'''
+	
+	# Calculate 3 marks that are farther and father away from the center line
+	marker_1 = 0.1 * params['track_width']
+	marker_2 = 0.25 * params['track_width']
+	marker_3 = 0.5 * params['track_width']
+	
+	# Give higher reward if the car is closer to center line and vice versa
+	if params['distance_from_center'] <= marker_1:
+		reward = 1.0
+	elif params['distance_from_center'] <= marker_2:
 		reward = 0.5
-	elif distance_from_center <= marker_3:
+	elif params['distance_from_center'] <= marker_3:
 		reward = 0.1
 	else:
-		reward = 1e-3  
+		reward = 1e-3  # likely crashed/ close to off track
+	
 	return float(reward)
 ```
 
@@ -164,60 +173,66 @@ Hint: 보상을 0으로 주지 마십시오. 보상 값이 0일 때, 저희가 �
 
 
 ```python
-def reward_function(on_track, x, y, distance_from_center, car_orientation, progress, steps, throttle, steering, track_width, waypoints, closest_waypoint):
+def reward_function(params):
+	'''
+	Example that penalizes steering, which helps mitigate zig-zag behaviors
+	'''
 
-	import math
-	marker_1 = 0.1 * track_width
-	marker_2 = 0.25 * track_width
-	marker_3 = 0.5 * track_width
+	# Calculate 3 marks that are farther and father away from the center line
+	marker_1 = 0.1 * params['track_width']
+	marker_2 = 0.25 * params['track_width']
+	marker_3 = 0.5 * params['track_width']
 
-	reward = 1e-3
-	if distance_from_center <= marker_1:
+	# Give higher reward if the car is closer to center line and vice versa
+	if params['distance_from_center'] <= marker_1:
 		reward = 1
-	elif distance_from_center <= marker_2:
+	elif params['distance_from_center'] <= marker_2:
 		reward = 0.5
-	elif distance_from_center <= marker_3:
+	elif params['distance_from_center'] <= marker_3:
 		reward = 0.1
 	else:
-		reward = 1e-3 
+		reward = 1e-3  # likely crashed/ close to off track
 
-	# penalize reward if the car is steering way too much
-	# steering angle is in radians in the reward function
-	# assumes your action space maximum steering angle is 30 and you have a steering granularity of at least 5. We will penalize any steering action that requires more than 15 degrees, absolute.
-	ABS_STEERING_THRESHOLD = math.radians(15)
-	if abs(steering) > ABS_STEERING_THRESHOLD:
+	# Steering penality threshold, change the number based on your action space setting
+	ABS_STEERING_THRESHOLD = 15
+
+	# Penalize reward if the car is steering too much
+	if abs(params['steering_angle']) > ABS_STEERING_THRESHOLD:  # Only need the absolute steering angle
 		reward *= 0.5
 
-	return float(reward)        
+	return float(reward)      
 ```
 
 **Example 3**: 저속 주행에 페널티를 중심선을 따라가도록 유도하는 고급 보상 함수.
 
 
 ```python
-def reward_function(on_track, x, y, distance_from_center, car_orientation, progress, steps, throttle, steering, track_width, waypoints, closest_waypoint):
+def reward_function(params):
+	'''
+	Example that penalizes slow driving. This create a non-linear reward function so it may take longer to learn.
+	'''
 
-	import math
-	marker_1 = 0.1 * track_width
-	marker_2 = 0.25 * track_width
-	marker_3 = 0.5 * track_width
+	# Calculate 3 marks that are farther and father away from the center line
+	marker_1 = 0.1 * params['track_width']
+	marker_2 = 0.25 * params['track_width']
+	marker_3 = 0.5 * params['track_width']
 
-	reward = 1e-3
-	if distance_from_center <= marker_1:
+	# Give higher reward if the car is closer to center line and vice versa
+	if params['distance_from_center'] <= marker_1:
 		reward = 1
-	elif distance_from_center <= marker_2:
+	elif params['distance_from_center'] <= marker_2:
 		reward = 0.5
-	elif distance_from_center <= marker_3:
+	elif params['distance_from_center'] <= marker_3:
 		reward = 0.1
 	else:
-		reward = 1e-3 
+		reward = 1e-3  # likely crashed/ close to off track
 
 	# penalize reward for the car taking slow actions
-	# throttle is in m/s
+	# speed is in m/s
 	# the below assumes your action space has a maximum speed of 5 m/s and speed granularity of 3
-	# we penalize any throttle less than 2m/s
-	THROTTLE_THRESHOLD = 2
-	if throttle < THROTTLE_THRESHOLD:
+	# we penalize any speed less than 2m/s
+	SPEED_THRESHOLD = 2
+	if params['speed'] < SPEED_THRESHOLD:
 		reward *= 0.5
 
 	return float(reward)
@@ -234,7 +249,7 @@ def reward_function(on_track, x, y, distance_from_center, car_orientation, progr
 
 위의 첫 번째 예제를 사용한 보상 함수가 있습니다
 
-![rewardfunction](img/reward_function.png)
+![rewardfunction](img/NewReward.png)
 
 다음 섹션으로 스크롤 하세요. 
 
@@ -372,7 +387,7 @@ AWS DeepRacer 서비스는 각 학습 작업에 대한 최종 모델 하나씩�
 
 - 학습 시간을 연장하세요. 모델이 안정적으로 한 바퀴를 완주할 수없는 경우 모델 학습 시간을 연장하십시오.
 - 더 빠른 랩타임을 얻으려면, 최대 속도를 늘리도록 동작 공간을 수정하십시오.
-- 더 빠른 주행에 가산점을 주도록 보상 함수를 수정하세요. 특히 진행 상황(progress), 진행 스텝수(steps), 속도(throttle) 변수를 활용하세요.
+- 더 빠른 주행에 가산점을 주도록 보상 함수를 수정하세요. 특히 진행 상황(progress), 진행 스텝수(steps), 속도(speed) 변수를 활용하세요.
 - 모델을 복제하여 학습 경험을 활용하십시오. 모델이 복제되면 동작 공간을 변경할 수 없으며,  바꾸면 작업이 실패한다는 점을 기억하세요.
 
 ## Step 4: RoboMaker 로그를 통해 모델 성능 분석하기
